@@ -1,43 +1,130 @@
 # Sistem Manajemen Inventaris - PT Telkom Indonesia
 ![screenshot](https://github.com/user-attachments/assets/f41c567c-fb3d-4b99-9570-1914279976aa)
 
-## Fitur Utama
--  Authentikasi Pengguna (Login & Registrasi)
-- Dashboard dengan ringkasan statistik
-- Manajemen Penuh (CRUD) untuk Data Barang dan Kategori
-- Pelacakan Barang Masuk dan Barang Keluar
-- Log Aktivitas untuk semua perubahan data
-- Pencarian dan Filter data barang
-- Desain Responsif dengan Sidebar "Push Content"
+## Overview
 
-## Teknologi yang Digunakan
-- **Backend**: Python, Flask, SQLAlchemy
-- **Frontend**: HTML, CSS, JavaScript, Bootstrap 5
-- **Database**: SQLite
-- **Manajemen Sesi**: Flask-Login
-- **Formulir**: Flask-WTF
+This is a web-based inventory management system built for PT Telkom Indonesia using Flask (Python) and SQLAlchemy. The application provides comprehensive inventory tracking capabilities including item management, categorization, warehouse operations, and activity logging.
 
-## Cara Menjalankan Proyek
-1.  **Clone repository ini:**
-    ```bash
-    git clone [URL_GITHUB_ANDA]
-    ```
-2.  **Masuk ke direktori proyek:**
-    ```bash
-    cd [NAMA_FOLDER_PROYEK]
-    ```
-3.  **Buat dan aktifkan virtual environment:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # Untuk Mac/Linux
-    .\venv\Scripts\activate  # Untuk Windows
-    ```
-4.  **Install semua library yang dibutuhkan:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-5.  **Jalankan aplikasi:**
-    ```bash
-    python main.py
-    ```
-Aplikasi akan berjalan di `http://127.0.0.1:5000`.
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Backend Architecture
+- **Framework**: Flask (Python web framework)
+- **Database ORM**: SQLAlchemy with Flask-SQLAlchemy extension
+- **Database**: SQLite (development) with support for PostgreSQL (production via DATABASE_URL environment variable)
+- **Forms**: Flask-WTF with WTForms for form handling and validation
+- **Session Management**: Flask sessions with configurable secret key
+
+### Frontend Architecture
+- **Template Engine**: Jinja2 (Flask's default)
+- **CSS Framework**: Bootstrap 5 with dark theme
+- **Icons**: Font Awesome 6.4.0
+- **JavaScript**: Vanilla JavaScript with Bootstrap components
+- **Responsive Design**: Mobile-first approach using Bootstrap grid system
+
+### Application Structure
+```
+├── app.py              # Application factory and configuration
+├── main.py             # Application entry point
+├── models.py           # Database models and relationships
+├── routes.py           # URL routes and view functions
+├── forms.py            # Form classes and validation
+├── templates/          # HTML templates
+└── static/            # CSS, JavaScript, and static assets
+```
+
+## Key Components
+
+### Database Models
+1. **Category**: Product categories with hierarchical organization
+2. **Item**: Inventory items with stock tracking and pricing
+3. **IncomingItem**: Records of received inventory with supplier details
+4. **OutgoingItem**: Records of issued inventory with destination tracking
+5. **ActivityLog**: System activity tracking and audit trail
+
+### Form Components
+- **CategoryForm**: Category creation and editing  
+- **ItemForm**: Streamlined item management with category selection
+- **IncomingItemForm**: Incoming inventory tracking with supplier details
+- **OutgoingItemForm**: Outgoing inventory tracking with destination management
+
+### Core Features
+- Dashboard with key performance indicators and 30-day transaction metrics
+- Total items and categories management
+- Incoming items tracking with supplier details and automatic stock updates
+- Outgoing items tracking with destination management and stock validation
+- Activity logging for comprehensive audit trails
+- Low stock alerts and inventory monitoring
+- User logout functionality
+
+## Data Flow
+
+### Item Management Flow
+1. Categories and warehouses must be created first
+2. Items are created with required category and warehouse assignments
+3. Stock levels are tracked with minimum stock thresholds
+4. All operations are logged to the activity log
+
+### Database Relationships
+- **One-to-Many**: Category → Items
+- **Foreign Keys**: Items reference category_id only
+- **Cascade Deletes**: Deleting categories removes associated items
+
+### Form Data Processing
+1. WTForms validates input data on the client and server side
+2. Dynamic dropdown population from database queries
+3. Form submission triggers database operations
+4. Success/error messages provided via Flask flash messaging
+
+## External Dependencies
+
+### Python Packages
+- **Flask**: Web framework and core functionality
+- **Flask-SQLAlchemy**: Database ORM and migrations
+- **Flask-WTF**: Form handling and CSRF protection
+- **WTForms**: Form field validation and rendering
+- **Werkzeug**: WSGI utilities and proxy fix middleware
+
+### Frontend Dependencies
+- **Bootstrap 5**: UI framework with dark theme support
+- **Font Awesome**: Icon library for enhanced UI
+- **CDN-hosted assets**: External hosting for faster load times
+
+### Environment Variables
+- `SESSION_SECRET`: Flask session encryption key
+- `DATABASE_URL`: Database connection string (defaults to SQLite)
+
+## Deployment Strategy
+
+### Development Setup
+- SQLite database for local development
+- Debug mode enabled via main.py
+- Automatic table creation on application startup
+- Hot reloading for development efficiency
+
+### Production Considerations
+- Environment-based configuration via DATABASE_URL
+- ProxyFix middleware for reverse proxy deployments
+- Connection pooling with health checks
+- Logging configuration for monitoring
+
+### Database Migration Strategy
+- SQLAlchemy model-first approach
+- Automatic table creation via db.create_all()
+- Support for PostgreSQL in production environments
+- Foreign key constraints and cascade operations
+
+### Security Features
+- CSRF protection via Flask-WTF
+- Session-based security with configurable secrets
+- Input validation and sanitization
+- SQL injection prevention through ORM usage
+
+### Scalability Considerations
+- Database connection pooling configured
+- Static asset serving via CDN
+- Template inheritance for code reusability
+- Modular code organization for maintainability
