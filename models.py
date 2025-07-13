@@ -1,0 +1,74 @@
+from datetime import datetime
+from app import db
+
+class Category(db.Model):
+    __tablename__ = 'categories'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship with items
+    items = db.relationship('Item', backref='category', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Category {self.name}>'
+
+class Warehouse(db.Model):
+    __tablename__ = 'warehouses'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    location = db.Column(db.String(200), nullable=False)
+    manager = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship with items
+    items = db.relationship('Item', backref='warehouse', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Warehouse {self.name}>'
+
+class Item(db.Model):
+    __tablename__ = 'items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), nullable=False, unique=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    quantity = db.Column(db.Integer, nullable=False, default=0)
+    min_stock = db.Column(db.Integer, nullable=False, default=10)
+    unit_price = db.Column(db.Float, nullable=False, default=0.0)
+    supplier = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Foreign keys
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False)
+    
+    @property
+    def is_low_stock(self):
+        return self.quantity <= self.min_stock
+    
+    @property
+    def total_value(self):
+        return self.quantity * self.unit_price
+    
+    def __repr__(self):
+        return f'<Item {self.code}: {self.name}>'
+
+class ActivityLog(db.Model):
+    __tablename__ = 'activity_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    action = db.Column(db.String(100), nullable=False)
+    table_name = db.Column(db.String(50), nullable=False)
+    record_id = db.Column(db.Integer, nullable=False)
+    details = db.Column(db.Text)
+    user = db.Column(db.String(100), default='System Admin')
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<ActivityLog {self.action} on {self.table_name}>'

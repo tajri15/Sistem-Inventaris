@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log - PT Telkom Indonesia Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-history me-2"></i>
+            Activity Log
+        </h1>
+    </div>
+</div>
+
+<!-- Activity Log Table -->
+<div class="card">
+    <div class="card-body">
+        {% if activities.items %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>Table</th>
+                            <th>Record ID</th>
+                            <th>Details</th>
+                            <th>User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in activities.items %}
+                            <tr>
+                                <td>
+                                    <small>
+                                        {{ activity.timestamp.strftime('%Y-%m-%d') }}<br>
+                                        {{ activity.timestamp.strftime('%H:%M:%S') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if activity.action == 'CREATE' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-plus me-1"></i>{{ activity.action }}
+                                        </span>
+                                    {% elif activity.action == 'UPDATE' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-edit me-1"></i>{{ activity.action }}
+                                        </span>
+                                    {% elif activity.action == 'DELETE' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-trash me-1"></i>{{ activity.action }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ activity.action }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code>{{ activity.table_name }}</code>
+                                </td>
+                                <td>
+                                    <span class="text-muted">#{{ activity.record_id }}</span>
+                                </td>
+                                <td>
+                                    {% if activity.details %}
+                                        <small>{{ activity.details }}</small>
+                                    {% else %}
+                                        <span class="text-muted">No details</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <i class="fas fa-user-circle me-1"></i>
+                                    {{ activity.user }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if activities.pages > 1 %}
+                <nav aria-label="Activity log pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if activities.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('activity_log', page=activities.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in activities.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != activities.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('activity_log', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if activities.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('activity_log', page=activities.next_num) }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+            
+            <div class="text-center text-muted mt-3">
+                <small>
+                    Showing {{ activities.per_page * (activities.page - 1) + 1 }} to 
+                    {{ activities.per_page * (activities.page - 1) + activities.items|length }} of 
+                    {{ activities.total }} activities
+                </small>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                <h4>No activities recorded</h4>
+                <p>Activity log will appear here as you perform actions in the system.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
