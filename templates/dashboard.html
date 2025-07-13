@@ -79,59 +79,39 @@
     </div>
 </div>
 
-<!-- Total Inventory Value -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body text-center">
-                <h3 class="text-success">
-                    <i class="fas fa-dollar-sign me-2"></i>
-                    Total Inventory Value: Rp {{ "{:,.2f}".format(total_value) }}
-                </h3>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- Quick Actions and Recent Activities -->
 <div class="row">
-    <!-- Low Stock Items -->
     <div class="col-md-6 mb-4">
         <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                    Low Stock Items
+                    <i class="fas fa-bolt text-primary me-2"></i>
+                    Quick Actions
                 </h5>
-                {% if low_stock_count > 5 %}
-                    <small class="text-muted">Showing 5 of {{ low_stock_count }}</small>
-                {% endif %}
             </div>
             <div class="card-body">
-                {% if low_stock_items %}
-                    <div class="list-group list-group-flush">
-                        {% for item in low_stock_items %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">{{ item.name }}</h6>
-                                    <small class="text-muted">Code: {{ item.code }}</small>
-                                </div>
-                                <span class="badge bg-warning rounded-pill">{{ item.quantity }} / {{ item.min_stock }}</span>
-                            </div>
-                        {% endfor %}
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_item') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Add New Item
+                        </a>
                     </div>
-                    {% if low_stock_count > 5 %}
-                        <div class="text-center mt-3">
-                            <a href="{{ url_for('items', stock='low') }}" class="btn btn-outline-warning btn-sm">
-                                View All Low Stock Items
-                            </a>
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <div class="text-center text-muted">
-                        <i class="fas fa-check-circle fa-3x mb-3"></i>
-                        <p>No low stock items!</p>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_category') }}" class="btn btn-info w-100">
+                            <i class="fas fa-tags me-2"></i>Add Category
+                        </a>
                     </div>
-                {% endif %}
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_incoming_item') }}" class="btn btn-success w-100">
+                            <i class="fas fa-arrow-down me-2"></i>Record Incoming
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_outgoing_item') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-arrow-up me-2"></i>Record Outgoing
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -176,83 +156,6 @@
                         <p>No recent activities</p>
                     </div>
                 {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Low Stock Alert and Quick Actions -->
-<div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                    Low Stock Alerts
-                </h5>
-                <span class="badge {% if low_stock_count > 0 %}bg-warning{% else %}bg-secondary{% endif %}">{{ low_stock_count }}</span>
-            </div>
-            <div class="card-body">
-                {% if low_stock_items %}
-                    <div class="list-group list-group-flush">
-                        {% for item in low_stock_items %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">{{ item.name }}</h6>
-                                    <small class="text-muted">Code: {{ item.code }}</small>
-                                </div>
-                                <span class="badge bg-warning rounded-pill">{{ item.quantity }} / {{ item.min_stock }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    {% if low_stock_count > 5 %}
-                        <div class="text-center mt-3">
-                            <a href="{{ url_for('items', stock='low') }}" class="btn btn-outline-warning btn-sm">
-                                View All Low Stock Items
-                            </a>
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <div class="text-center text-muted">
-                        <i class="fas fa-check-circle fa-3x mb-3"></i>
-                        <p>No low stock items!</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-bolt text-primary me-2"></i>
-                    Quick Actions
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('add_item') }}" class="btn btn-primary w-100">
-                            <i class="fas fa-plus me-2"></i>Add New Item
-                        </a>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('add_category') }}" class="btn btn-info w-100">
-                            <i class="fas fa-tags me-2"></i>Add Category
-                        </a>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('add_incoming_item') }}" class="btn btn-success w-100">
-                            <i class="fas fa-arrow-down me-2"></i>Record Incoming
-                        </a>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('add_outgoing_item') }}" class="btn btn-warning w-100">
-                            <i class="fas fa-arrow-up me-2"></i>Record Outgoing
-                        </a>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

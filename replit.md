@@ -45,9 +45,10 @@ Preferred communication style: Simple, everyday language.
 5. **ActivityLog**: System activity tracking and audit trail
 
 ### Form Components
-- **CategoryForm**: Category creation and editing
-- **WarehouseForm**: Warehouse location management
-- **ItemForm**: Comprehensive item management with dynamic dropdowns
+- **CategoryForm**: Category creation and editing  
+- **ItemForm**: Streamlined item management with category selection
+- **IncomingItemForm**: Incoming inventory tracking with supplier details
+- **OutgoingItemForm**: Outgoing inventory tracking with destination management
 
 ### Core Features
 - Dashboard with key performance indicators and 30-day transaction metrics
@@ -67,9 +68,9 @@ Preferred communication style: Simple, everyday language.
 4. All operations are logged to the activity log
 
 ### Database Relationships
-- **One-to-Many**: Category → Items, Warehouse → Items
-- **Foreign Keys**: Items reference both category_id and warehouse_id
-- **Cascade Deletes**: Deleting categories or warehouses removes associated items
+- **One-to-Many**: Category → Items
+- **Foreign Keys**: Items reference category_id only
+- **Cascade Deletes**: Deleting categories removes associated items
 
 ### Form Data Processing
 1. WTForms validates input data on the client and server side

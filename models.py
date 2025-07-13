@@ -15,20 +15,7 @@ class Category(db.Model):
     def __repr__(self):
         return f'<Category {self.name}>'
 
-class Warehouse(db.Model):
-    __tablename__ = 'warehouses'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
-    location = db.Column(db.String(200), nullable=False)
-    manager = db.Column(db.String(100))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationship with items
-    items = db.relationship('Item', backref='warehouse', lazy=True, cascade='all, delete-orphan')
-    
-    def __repr__(self):
-        return f'<Warehouse {self.name}>'
+
 
 class Item(db.Model):
     __tablename__ = 'items'
@@ -38,7 +25,7 @@ class Item(db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     quantity = db.Column(db.Integer, nullable=False, default=0)
-    min_stock = db.Column(db.Integer, nullable=False, default=10)
+
     unit_price = db.Column(db.Float, nullable=False, default=0.0)
     supplier = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -46,15 +33,6 @@ class Item(db.Model):
     
     # Foreign keys
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False)
-    
-    @property
-    def is_low_stock(self):
-        return self.quantity <= self.min_stock
-    
-    @property
-    def total_value(self):
-        return self.quantity * self.unit_price
     
     def __repr__(self):
         return f'<Item {self.code}: {self.name}>'

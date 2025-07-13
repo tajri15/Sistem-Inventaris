@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
-from models import Item, Category, Warehouse, ActivityLog, IncomingItem, OutgoingItem
-from forms import ItemForm, CategoryForm, WarehouseForm, IncomingItemForm, OutgoingItemForm
+from models import Item, Category, ActivityLog, IncomingItem, OutgoingItem
+from forms import ItemForm, CategoryForm, IncomingItemForm, OutgoingItemForm
 from sqlalchemy import or_, desc
 from datetime import datetime
 
@@ -29,13 +29,6 @@ def dashboard():
     total_incoming = IncomingItem.query.filter(IncomingItem.received_date >= thirty_days_ago).count()
     total_outgoing = OutgoingItem.query.filter(OutgoingItem.issued_date >= thirty_days_ago).count()
     
-    # Low stock items
-    low_stock_items = Item.query.filter(Item.quantity <= Item.min_stock).all()
-    low_stock_count = len(low_stock_items)
-    
-    # Total inventory value
-    total_value = sum(item.total_value for item in Item.query.all())
-    
     # Recent activities
     recent_activities = ActivityLog.query.order_by(desc(ActivityLog.timestamp)).limit(10).all()
     
@@ -44,9 +37,6 @@ def dashboard():
                          total_categories=total_categories,
                          total_incoming=total_incoming,
                          total_outgoing=total_outgoing,
-                         low_stock_count=low_stock_count,
-                         low_stock_items=low_stock_items[:5],  # Show only first 5
-                         total_value=total_value,
                          recent_activities=recent_activities)
 
 @app.route('/items')
@@ -54,8 +44,6 @@ def items():
     """View all items with search and filter functionality"""
     search = request.args.get('search', '')
     category_filter = request.args.get('category', '')
-    warehouse_filter = request.args.get('warehouse', '')
-    stock_filter = request.args.get('stock', '')
     
     query = Item.query
     
@@ -71,28 +59,14 @@ def items():
     if category_filter:
         query = query.filter(Item.category_id == category_filter)
     
-    # Apply warehouse filter
-    if warehouse_filter:
-        query = query.filter(Item.warehouse_id == warehouse_filter)
-    
-    # Apply stock filter
-    if stock_filter == 'low':
-        query = query.filter(Item.quantity <= Item.min_stock)
-    elif stock_filter == 'out':
-        query = query.filter(Item.quantity == 0)
-    
     items = query.order_by(Item.name).all()
     categories = Category.query.order_by(Category.name).all()
-    warehouses = Warehouse.query.order_by(Warehouse.name).all()
     
     return render_template('items.html',
                          items=items,
                          categories=categories,
-                         warehouses=warehouses,
                          search=search,
-                         category_filter=category_filter,
-                         warehouse_filter=warehouse_filter,
-                         stock_filter=stock_filter)
+                         category_filter=category_filter)
 
 @app.route('/items/add', methods=['GET', 'POST'])
 def add_item():
@@ -111,11 +85,9 @@ def add_item():
             name=form.name.data,
             description=form.description.data,
             quantity=form.quantity.data,
-            min_stock=form.min_stock.data,
             unit_price=form.unit_price.data,
             supplier=form.supplier.data,
-            category_id=form.category_id.data,
-            warehouse_id=form.warehouse_id.data
+            category_id=form.category_id.data
         )
         
         db.session.add(item)
@@ -148,11 +120,9 @@ def edit_item(id):
         item.name = form.name.data
         item.description = form.description.data
         item.quantity = form.quantity.data
-        item.min_stock = form.min_stock.data
         item.unit_price = form.unit_price.data
         item.supplier = form.supplier.data
         item.category_id = form.category_id.data
-        item.warehouse_id = form.warehouse_id.data
         item.updated_at = datetime.utcnow()
         
         db.session.commit()
@@ -261,88 +231,7 @@ def delete_category(id):
     flash('Category deleted successfully!', 'success')
     return redirect(url_for('categories'))
 
-@app.route('/warehouses')
-def warehouses():
-    """View all warehouses"""
-    warehouses = Warehouse.query.order_by(Warehouse.name).all()
-    return render_template('warehouses.html', warehouses=warehouses)
 
-@app.route('/warehouses/add', methods=['GET', 'POST'])
-def add_warehouse():
-    """Add new warehouse"""
-    form = WarehouseForm()
-    
-    if form.validate_on_submit():
-        # Check if name already exists
-        existing_warehouse = Warehouse.query.filter_by(name=form.name.data).first()
-        if existing_warehouse:
-            flash('Warehouse name already exists. Please use a different name.', 'error')
-            return render_template('warehouses.html', form=form, action='Add')
-        
-        warehouse = Warehouse(
-            name=form.name.data,
-            location=form.location.data,
-            manager=form.manager.data
-        )
-        
-        db.session.add(warehouse)
-        db.session.commit()
-        
-        # Log activity
-        log_activity('CREATE', 'warehouses', warehouse.id, f'Added new warehouse: {warehouse.name}')
-        
-        flash('Warehouse added successfully!', 'success')
-        return redirect(url_for('warehouses'))
-    
-    return render_template('warehouses.html', form=form, action='Add')
-
-@app.route('/warehouses/edit/<int:id>', methods=['GET', 'POST'])
-def edit_warehouse(id):
-    """Edit existing warehouse"""
-    warehouse = Warehouse.query.get_or_404(id)
-    form = WarehouseForm(obj=warehouse)
-    
-    if form.validate_on_submit():
-        # Check if name already exists (excluding current warehouse)
-        existing_warehouse = Warehouse.query.filter(Warehouse.name == form.name.data, Warehouse.id != id).first()
-        if existing_warehouse:
-            flash('Warehouse name already exists. Please use a different name.', 'error')
-            return render_template('warehouses.html', form=form, action='Edit', warehouse=warehouse)
-        
-        old_name = warehouse.name
-        warehouse.name = form.name.data
-        warehouse.location = form.location.data
-        warehouse.manager = form.manager.data
-        
-        db.session.commit()
-        
-        # Log activity
-        log_activity('UPDATE', 'warehouses', warehouse.id, f'Updated warehouse from "{old_name}" to "{warehouse.name}"')
-        
-        flash('Warehouse updated successfully!', 'success')
-        return redirect(url_for('warehouses'))
-    
-    return render_template('warehouses.html', form=form, action='Edit', warehouse=warehouse)
-
-@app.route('/warehouses/delete/<int:id>', methods=['POST'])
-def delete_warehouse(id):
-    """Delete warehouse"""
-    warehouse = Warehouse.query.get_or_404(id)
-    
-    # Check if warehouse has items
-    if warehouse.items:
-        flash(f'Cannot delete warehouse "{warehouse.name}" because it has {len(warehouse.items)} items associated with it.', 'error')
-        return redirect(url_for('warehouses'))
-    
-    warehouse_name = warehouse.name
-    db.session.delete(warehouse)
-    db.session.commit()
-    
-    # Log activity
-    log_activity('DELETE', 'warehouses', id, f'Deleted warehouse: {warehouse_name}')
-    
-    flash('Warehouse deleted successfully!', 'success')
-    return redirect(url_for('warehouses'))
 
 @app.route('/activity-log')
 def activity_log():
