@@ -1,14 +1,36 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, IntegerField, FloatField, SelectField, SubmitField, DateField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional
-from models import Category, Item
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, IntegerField, FloatField, SelectField, DateField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, NumberRange, Optional
+from models import User, Category, Item
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember Me')
+    submit = SubmitField('Sign In')
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    password2 = PasswordField(
+        'Repeat Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match.')])
+    submit = SubmitField('Register')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user is not None:
+            raise ValidationError('This username is already taken.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None:
+            raise ValidationError('This email address is already registered.')
 
 class CategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(min=2, max=100)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=500)])
     submit = SubmitField('Save Category')
-
-
 
 class ItemForm(FlaskForm):
     code = StringField('Item Code', validators=[DataRequired(), Length(min=2, max=50)])
@@ -32,7 +54,7 @@ class IncomingItemForm(FlaskForm):
     batch_number = StringField('Batch Number', validators=[Optional(), Length(max=100)])
     expiry_date = DateField('Expiry Date', validators=[Optional()])
     notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
-    received_by = StringField('Received By', validators=[Optional(), Length(max=100)])
+    received_by = StringField('Received By', validators=[DataRequired(), Length(max=100)])
     submit = SubmitField('Record Incoming Items')
     
     def __init__(self, *args, **kwargs):
@@ -46,7 +68,7 @@ class OutgoingItemForm(FlaskForm):
     purpose = StringField('Purpose', validators=[Optional(), Length(max=200)])
     request_number = StringField('Request Number', validators=[Optional(), Length(max=100)])
     notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
-    issued_by = StringField('Issued By', validators=[Optional(), Length(max=100)])
+    issued_by = StringField('Issued By', validators=[DataRequired(), Length(max=100)])
     submit = SubmitField('Record Outgoing Items')
     
     def __init__(self, *args, **kwargs):

@@ -20,7 +20,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="card-title">{{ total_items }}</h4>
-                        <p class="card-text">Total Items</p>
+                        <p class="card-text">Total Barang</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-box fa-2x"></i>
@@ -36,7 +36,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="card-title">{{ total_categories }}</h4>
-                        <p class="card-text">Categories</p>
+                        <p class="card-text">Kategori </p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-tags fa-2x"></i>
@@ -52,7 +52,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="card-title">{{ total_incoming }}</h4>
-                        <p class="card-text">Incoming Items (30d)</p>
+                        <p class="card-text">Barang Masuk (30d)</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-arrow-down fa-2x"></i>
@@ -68,7 +68,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="card-title">{{ total_outgoing }}</h4>
-                        <p class="card-text">Outgoing Items (30d)</p>
+                        <p class="card-text">Barang Keluar (30d)</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-arrow-up fa-2x"></i>
@@ -93,22 +93,22 @@
                 <div class="row">
                     <div class="col-md-6 mb-2">
                         <a href="{{ url_for('add_item') }}" class="btn btn-primary w-100">
-                            <i class="fas fa-plus me-2"></i>Add New Item
+                            <i class="fas fa-plus me-2"></i>Tambahkan Barang
                         </a>
                     </div>
                     <div class="col-md-6 mb-2">
                         <a href="{{ url_for('add_category') }}" class="btn btn-info w-100">
-                            <i class="fas fa-tags me-2"></i>Add Category
+                            <i class="fas fa-tags me-2"></i>Tambahkan Kategori
                         </a>
                     </div>
                     <div class="col-md-6 mb-2">
                         <a href="{{ url_for('add_incoming_item') }}" class="btn btn-success w-100">
-                            <i class="fas fa-arrow-down me-2"></i>Record Incoming
+                            <i class="fas fa-arrow-down me-2"></i>Catat Barang Masuk
                         </a>
                     </div>
                     <div class="col-md-6 mb-2">
                         <a href="{{ url_for('add_outgoing_item') }}" class="btn btn-warning w-100">
-                            <i class="fas fa-arrow-up me-2"></i>Record Outgoing
+                            <i class="fas fa-arrow-up me-2"></i>Catat Barang Keluar
                         </a>
                     </div>
                 </div>
@@ -122,7 +122,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="fas fa-history text-info me-2"></i>
-                    Recent Activities
+                    Aktivitas Terkini
                 </h5>
                 <a href="{{ url_for('activity_log') }}" class="btn btn-outline-info btn-sm">View All</a>
             </div>
@@ -153,7 +153,7 @@
                 {% else %}
                     <div class="text-center text-muted">
                         <i class="fas fa-clipboard-list fa-3x mb-3"></i>
-                        <p>No recent activities</p>
+                        <p>Tidak Ada Aktivias Terkini</p>
                     </div>
                 {% endif %}
             </div>

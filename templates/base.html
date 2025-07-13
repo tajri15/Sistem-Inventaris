@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}PT Telkom Indonesia - Inventory Management System{% endblock %}</title>
+    <title>{% block title %}PT Telkom Indonesia - Sistem Manajemen Inventaris{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -24,9 +24,9 @@
             </button>
             
             <!-- Brand/Logo -->
-            <a class="navbar-brand fw-bold text-white" href="{{ url_for('dashboard') }}">
-                <i class="fas fa-boxes me-2"></i>
-                PT Telkom Indonesia - Inventory System
+            <a class="navbar-brand fw-bold text-white d-flex align-items-center" href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Telkom Logo" class="navbar-logo me-2">
+                PT Telkom Indonesia - Sistem Inventaris
             </a>
             
             <!-- User Info (Right Side) -->
@@ -54,27 +54,27 @@
             </li>
             <li class="sidebar-item">
                 <a class="sidebar-link {% if request.endpoint in ['items', 'add_item', 'edit_item'] %}active{% endif %}" href="{{ url_for('items') }}">
-                    <i class="fas fa-box me-2"></i>Total Items
+                    <i class="fas fa-box me-2"></i>Total Barang
                 </a>
             </li>
             <li class="sidebar-item">
                 <a class="sidebar-link {% if request.endpoint in ['categories', 'add_category', 'edit_category'] %}active{% endif %}" href="{{ url_for('categories') }}">
-                    <i class="fas fa-tags me-2"></i>Categories
+                    <i class="fas fa-tags me-2"></i>Kategori
                 </a>
             </li>
             <li class="sidebar-item">
                 <a class="sidebar-link {% if request.endpoint == 'incoming_items' %}active{% endif %}" href="{{ url_for('incoming_items') }}">
-                    <i class="fas fa-arrow-down me-2"></i>Incoming Items
+                    <i class="fas fa-arrow-down me-2"></i>Barang Masuk
                 </a>
             </li>
             <li class="sidebar-item">
                 <a class="sidebar-link {% if request.endpoint == 'outgoing_items' %}active{% endif %}" href="{{ url_for('outgoing_items') }}">
-                    <i class="fas fa-arrow-up me-2"></i>Outgoing Items
+                    <i class="fas fa-arrow-up me-2"></i>Barang Keluar
                 </a>
             </li>
             <li class="sidebar-item">
                 <a class="sidebar-link {% if request.endpoint == 'activity_log' %}active{% endif %}" href="{{ url_for('activity_log') }}">
-                    <i class="fas fa-history me-2"></i>Activity Log
+                    <i class="fas fa-history me-2"></i>Log Kegiatan
                 </a>
             </li>
         </ul>

@@ -14,20 +14,19 @@ function initializeSidebar() {
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarClose = document.getElementById('sidebarClose');
     const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
     
     // Open sidebar
     function openSidebar() {
         sidebar.classList.add('show');
-        sidebarOverlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
+        // Tambahkan class ke body untuk memicu pergeseran konten
+        document.body.classList.add('sidebar-open');
     }
     
     // Close sidebar
     function closeSidebar() {
         sidebar.classList.remove('show');
-        sidebarOverlay.classList.remove('show');
-        document.body.style.overflow = 'auto';
+        // Hapus class dari body untuk mengembalikan posisi konten
+        document.body.classList.remove('sidebar-open');
     }
     
     // Event listeners
@@ -38,21 +37,7 @@ function initializeSidebar() {
     if (sidebarClose) {
         sidebarClose.addEventListener('click', closeSidebar);
     }
-    
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', closeSidebar);
-    }
-    
-    // Close sidebar when clicking on a link (mobile)
-    const sidebarLinks = document.querySelectorAll('.sidebar-link');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                closeSidebar();
-            }
-        });
-    });
-    
+
     // Close sidebar on escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && sidebar.classList.contains('show')) {

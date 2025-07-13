@@ -129,9 +129,9 @@
                             <label for="item_id" class="form-label">Item *</label>
                             <select class="form-select" id="item_id" name="item_id" required>
                                 <option value="">Select Item</option>
-                                {% for item in form.item_id.choices if form %}
+                                {% for item in form.item_id.choices %}
                                     <option value="{{ item[0] }}">{{ item[1] }}</option>
-                                {% endif %}
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
