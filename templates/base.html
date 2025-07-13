@@ -36,7 +36,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint in ['items', 'add_item', 'edit_item'] %}active{% endif %}" href="{{ url_for('items') }}">
-                            <i class="fas fa-box me-1"></i>Items
+                            <i class="fas fa-box me-1"></i>Total Items
                         </a>
                     </li>
                     <li class="nav-item">
@@ -45,13 +45,23 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint in ['warehouses', 'add_warehouse', 'edit_warehouse'] %}active{% endif %}" href="{{ url_for('warehouses') }}">
-                            <i class="fas fa-warehouse me-1"></i>Warehouses
+                        <a class="nav-link {% if request.endpoint == 'incoming_items' %}active{% endif %}" href="{{ url_for('incoming_items') }}">
+                            <i class="fas fa-arrow-down me-1"></i>Incoming Items
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'outgoing_items' %}active{% endif %}" href="{{ url_for('outgoing_items') }}">
+                            <i class="fas fa-arrow-up me-1"></i>Outgoing Items
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'activity_log' %}active{% endif %}" href="{{ url_for('activity_log') }}">
                             <i class="fas fa-history me-1"></i>Activity Log
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
                         </a>
                     </li>
                 </ul>

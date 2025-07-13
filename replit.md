@@ -39,9 +39,10 @@ Preferred communication style: Simple, everyday language.
 
 ### Database Models
 1. **Category**: Product categories with hierarchical organization
-2. **Warehouse**: Storage locations with manager assignments
-3. **Item**: Inventory items with stock tracking and pricing
-4. **ActivityLog**: System activity tracking and audit trail
+2. **Item**: Inventory items with stock tracking and pricing
+3. **IncomingItem**: Records of received inventory with supplier details
+4. **OutgoingItem**: Records of issued inventory with destination tracking
+5. **ActivityLog**: System activity tracking and audit trail
 
 ### Form Components
 - **CategoryForm**: Category creation and editing
@@ -49,11 +50,13 @@ Preferred communication style: Simple, everyday language.
 - **ItemForm**: Comprehensive item management with dynamic dropdowns
 
 ### Core Features
-- Dashboard with key performance indicators
-- CRUD operations for all major entities
-- Search and filtering capabilities
-- Low stock alerts and inventory tracking
-- Activity logging for audit purposes
+- Dashboard with key performance indicators and 30-day transaction metrics
+- Total items and categories management
+- Incoming items tracking with supplier details and automatic stock updates
+- Outgoing items tracking with destination management and stock validation
+- Activity logging for comprehensive audit trails
+- Low stock alerts and inventory monitoring
+- User logout functionality
 
 ## Data Flow
 

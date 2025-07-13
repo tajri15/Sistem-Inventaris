@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
-from models import Item, Category, Warehouse, ActivityLog
-from forms import ItemForm, CategoryForm, WarehouseForm
+from models import Item, Category, Warehouse, ActivityLog, IncomingItem, OutgoingItem
+from forms import ItemForm, CategoryForm, WarehouseForm, IncomingItemForm, OutgoingItemForm
 from sqlalchemy import or_, desc
 from datetime import datetime
 
@@ -21,7 +21,13 @@ def dashboard():
     """Main dashboard with key statistics"""
     total_items = Item.query.count()
     total_categories = Category.query.count()
-    total_warehouses = Warehouse.query.count()
+    
+    # Calculate incoming and outgoing items (last 30 days)
+    from datetime import timedelta
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    
+    total_incoming = IncomingItem.query.filter(IncomingItem.received_date >= thirty_days_ago).count()
+    total_outgoing = OutgoingItem.query.filter(OutgoingItem.issued_date >= thirty_days_ago).count()
     
     # Low stock items
     low_stock_items = Item.query.filter(Item.quantity <= Item.min_stock).all()
@@ -36,7 +42,8 @@ def dashboard():
     return render_template('dashboard.html',
                          total_items=total_items,
                          total_categories=total_categories,
-                         total_warehouses=total_warehouses,
+                         total_incoming=total_incoming,
+                         total_outgoing=total_outgoing,
                          low_stock_count=low_stock_count,
                          low_stock_items=low_stock_items[:5],  # Show only first 5
                          total_value=total_value,
@@ -348,3 +355,111 @@ def activity_log():
     )
     
     return render_template('activity_log.html', activities=activities)
+
+@app.route('/incoming-items')
+def incoming_items():
+    """View all incoming items"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    incoming = IncomingItem.query.order_by(desc(IncomingItem.received_date)).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    form = IncomingItemForm()
+    return render_template('incoming_items.html', incoming=incoming, form=form)
+
+@app.route('/incoming-items/add', methods=['GET', 'POST'])
+def add_incoming_item():
+    """Add new incoming item"""
+    form = IncomingItemForm()
+    
+    if form.validate_on_submit():
+        item = Item.query.get(form.item_id.data)
+        
+        # Create incoming record
+        incoming = IncomingItem(
+            item_id=form.item_id.data,
+            quantity=form.quantity.data,
+            unit_price=form.unit_price.data,
+            supplier=form.supplier.data,
+            batch_number=form.batch_number.data,
+            expiry_date=form.expiry_date.data,
+            notes=form.notes.data,
+            received_by=form.received_by.data or 'System Admin'
+        )
+        
+        # Update item quantity
+        item.quantity += form.quantity.data
+        item.updated_at = datetime.utcnow()
+        
+        db.session.add(incoming)
+        db.session.commit()
+        
+        # Log activity
+        log_activity('CREATE', 'incoming_items', incoming.id, 
+                    f'Received {form.quantity.data} units of {item.name} from {form.supplier.data or "Unknown supplier"}')
+        
+        flash(f'Successfully recorded incoming {form.quantity.data} units of {item.name}!', 'success')
+        return redirect(url_for('incoming_items'))
+    
+    return render_template('incoming_items.html', form=form, action='Add')
+
+@app.route('/outgoing-items')
+def outgoing_items():
+    """View all outgoing items"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    outgoing = OutgoingItem.query.order_by(desc(OutgoingItem.issued_date)).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    form = OutgoingItemForm()
+    return render_template('outgoing_items.html', outgoing=outgoing, form=form)
+
+@app.route('/outgoing-items/add', methods=['GET', 'POST'])
+def add_outgoing_item():
+    """Add new outgoing item"""
+    form = OutgoingItemForm()
+    
+    if form.validate_on_submit():
+        item = Item.query.get(form.item_id.data)
+        
+        # Check if sufficient stock
+        if item.quantity < form.quantity.data:
+            flash(f'Insufficient stock! Available: {item.quantity}, Requested: {form.quantity.data}', 'error')
+            return render_template('outgoing_items.html', form=form, action='Add')
+        
+        # Create outgoing record
+        outgoing = OutgoingItem(
+            item_id=form.item_id.data,
+            quantity=form.quantity.data,
+            destination=form.destination.data,
+            purpose=form.purpose.data,
+            request_number=form.request_number.data,
+            notes=form.notes.data,
+            issued_by=form.issued_by.data or 'System Admin'
+        )
+        
+        # Update item quantity
+        item.quantity -= form.quantity.data
+        item.updated_at = datetime.utcnow()
+        
+        db.session.add(outgoing)
+        db.session.commit()
+        
+        # Log activity
+        log_activity('CREATE', 'outgoing_items', outgoing.id,
+                    f'Issued {form.quantity.data} units of {item.name} to {form.destination.data}')
+        
+        flash(f'Successfully recorded outgoing {form.quantity.data} units of {item.name}!', 'success')
+        return redirect(url_for('outgoing_items'))
+    
+    return render_template('outgoing_items.html', form=form, action='Add')
+
+@app.route('/logout')
+def logout():
+    """Logout user"""
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('dashboard'))

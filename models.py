@@ -59,6 +59,53 @@ class Item(db.Model):
     def __repr__(self):
         return f'<Item {self.code}: {self.name}>'
 
+class IncomingItem(db.Model):
+    __tablename__ = 'incoming_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Float, nullable=False, default=0.0)
+    supplier = db.Column(db.String(200))
+    batch_number = db.Column(db.String(100))
+    expiry_date = db.Column(db.Date)
+    received_date = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+    received_by = db.Column(db.String(100), default='System Admin')
+    
+    # Relationship
+    item = db.relationship('Item', backref='incoming_transactions')
+    
+    @property
+    def total_value(self):
+        return self.quantity * self.unit_price
+    
+    def __repr__(self):
+        return f'<IncomingItem {self.quantity} of {self.item.name}>'
+
+class OutgoingItem(db.Model):
+    __tablename__ = 'outgoing_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    destination = db.Column(db.String(200), nullable=False)
+    purpose = db.Column(db.String(200))
+    request_number = db.Column(db.String(100))
+    issued_date = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+    issued_by = db.Column(db.String(100), default='System Admin')
+    
+    # Relationship
+    item = db.relationship('Item', backref='outgoing_transactions')
+    
+    @property
+    def total_value(self):
+        return self.quantity * self.item.unit_price
+    
+    def __repr__(self):
+        return f'<OutgoingItem {self.quantity} of {self.item.name}>'
+
 class ActivityLog(db.Model):
     __tablename__ = 'activity_logs'
     
