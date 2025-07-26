@@ -1,0 +1,1601 @@
+activity_log.html
+{% extends "base.html" %}
+
+{% block title %}Activity Log - PT Telkom Indonesia Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-history me-2"></i>
+            Log Kegiatan
+        </h1>
+    </div>
+</div>
+
+<!-- Activity Log Table -->
+<div class="card">
+    <div class="card-body">
+        {% if activities.items %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Aksi</th>
+                            <th>Tabel</th>
+                            <th>ID Record</th>
+                            <th>Detail</th>
+                            <th>Pengguna</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in activities.items %}
+                            <tr>
+                                <td>
+                                    <small>
+                                        {{ activity.timestamp.strftime('%Y-%m-%d') }}<br>
+                                        {{ activity.timestamp.strftime('%H:%M:%S') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if activity.action == 'CREATE' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-plus me-1"></i>{{ activity.action }}
+                                        </span>
+                                    {% elif activity.action == 'UPDATE' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-edit me-1"></i>{{ activity.action }}
+                                        </span>
+                                    {% elif activity.action == 'DELETE' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-trash me-1"></i>{{ activity.action }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ activity.action }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code>{{ activity.table_name }}</code>
+                                </td>
+                                <td>
+                                    <span class="text-muted">#{{ activity.record_id }}</span>
+                                </td>
+                                <td>
+                                    {% if activity.details %}
+                                        <small>{{ activity.details }}</small>
+                                    {% else %}
+                                        <span class="text-muted">No details</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <i class="fas fa-user-circle me-1"></i>
+                                    {{ activity.user }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if activities.pages > 1 %}
+                <nav aria-label="Activity log pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if activities.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('activity_log', page=activities.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i> Sebelumnya
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in activities.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != activities.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('activity_log', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if activities.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('activity_log', page=activities.next_num) }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+            
+            <div class="text-center text-muted mt-3">
+            <small>
+                Menampilkan {{ activities.per_page * (activities.page - 1) + 1 }} sampai 
+                {{ activities.per_page * (activities.page - 1) + activities.items|length }} dari 
+                {{ activities.total }} aktivitas
+            </small>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                <h4>Tidak ada aktivitas tercatat</h4>
+                <p>Log aktivitas akan muncul di sini saat Anda melakukan aksi dalam sistem.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+auth_layout.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Auth{% endblock %} - PT Telkom Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f7f6;
+        }
+        .auth-card {
+            max-width: 450px;
+            margin: 5rem auto;
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+        }
+        .auth-header {
+            background-color: #dc2626;
+            color: white;
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+        .btn-primary {
+            background-color: #dc2626;
+            border-color: #dc2626;
+        }
+        .btn-primary:hover {
+            background-color: #b91c1c;
+            border-color: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card auth-card">
+            <div class="auth-header text-center py-3">
+                <a class="navbar-brand fw-bold text-white d-flex align-items-center justify-content-center" href="#">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" 
+                        alt="Telkom Logo" 
+                        class="navbar-logo me-2"
+                        style="height: 30px;">
+                    PT Telkom Indonesia - Sistem Inventaris
+                </a>
+            </div>
+            <div class="card-body p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+base.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PT Telkom Indonesia - Sistem Manajemen Inventaris{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg telkom-navbar">
+        <div class="container-fluid">
+            <!-- Menu Toggle Button (Left Side) -->
+            <button class="btn btn-outline-light me-3" type="button" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <!-- Brand/Logo -->
+            <a class="navbar-brand fw-bold text-white d-flex align-items-center" href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Telkom Logo" class="navbar-logo me-2">
+                PT Telkom Indonesia - Sistem Inventaris
+            </a>
+            
+            <!-- User Info (Right Side) -->
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h5 class="text-white mb-0">Menu</h5>
+            <button class="btn btn-sm btn-outline-light" id="sidebarClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if request.endpoint in ['items', 'add_item', 'edit_item'] %}active{% endif %}" href="{{ url_for('items') }}">
+                    <i class="fas fa-box me-2"></i>Total Barang
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if request.endpoint in ['categories', 'add_category', 'edit_category'] %}active{% endif %}" href="{{ url_for('categories') }}">
+                    <i class="fas fa-tags me-2"></i>Kategori
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if request.endpoint == 'incoming_items' %}active{% endif %}" href="{{ url_for('incoming_items') }}">
+                    <i class="fas fa-arrow-down me-2"></i>Barang Masuk
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if request.endpoint == 'outgoing_items' %}active{% endif %}" href="{{ url_for('outgoing_items') }}">
+                    <i class="fas fa-arrow-up me-2"></i>Barang Keluar
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if request.endpoint == 'activity_log' %}active{% endif %}" href="{{ url_for('activity_log') }}">
+                    <i class="fas fa-history me-2"></i>Log Kegiatan
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container-fluid">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="telkom-footer text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0 text-white">&copy; 2025 PT Telkom Indonesia. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+
+categories.html
+{% extends "base.html" %}
+
+{% block title %}Kategori - PT Telkom Indonesia Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-tags me-2"></i>
+                Kategori Barang
+            </h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openAddModal()">
+                <i class="fas fa-plus me-2"></i>Tambah Kategori Baru
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Table -->
+<div class="card">
+    <div class="card-body">
+        {% if categories %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Deskripsi</th>
+                            <th>Jumlah Barang</th>
+                            <th>Dibuat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                            <tr>
+                                <td><strong>{{ category.name }}</strong></td>
+                                <td>
+                                    {% if category.description %}
+                                        {{ category.description[:100] }}{% if category.description|length > 100 %}...{% endif %}
+                                    {% else %}
+                                        <span class="text-muted">Tidak ada deskripsi</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ category.items|length }} Barang</span>
+                                </td>
+                                <td>{{ category.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary" onclick="openEditModal({{ category.id }})" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% if category.items|length == 0 %}
+                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete({{ category.id }}, '{{ category.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-outline-danger" disabled title="Cannot delete category with items">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-tags fa-3x mb-3"></i>
+                <h4>Tidak ada kategori ditemukan</h4>
+                <p>Tambahkan kategori pertama Anda untuk mengatur barang inventaris.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="categoryForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Tambah Kategori Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nama Kategori *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Deskripsi</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter category description (optional)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
+                    <button type="submit" class="btn btn-primary">Simpan Kategori</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menghapus kategori "<span id="deleteCategoryName"></span>"?</p>
+                <p class="text-danger">Aksi ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
+                <form id="deleteForm" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add New Category';
+    document.getElementById('categoryForm').action = '{{ url_for("add_category") }}';
+    document.getElementById('categoryForm').reset();
+}
+
+function openEditModal(categoryId) {
+    document.getElementById('modalTitle').textContent = 'Edit Category';
+    document.getElementById('categoryForm').action = '/categories/edit/' + categoryId;
+    
+    // Redirect to edit page for form population
+    window.location.href = '/categories/edit/' + categoryId;
+}
+
+function confirmDelete(categoryId, categoryName) {
+    document.getElementById('deleteCategoryName').textContent = categoryName;
+    document.getElementById('deleteForm').action = '/categories/delete/' + categoryId;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}
+
+dashboard.html
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PT Telkom Indonesia Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_items }}</h4>
+                        <p class="card-text">Total Barang</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_categories }}</h4>
+                        <p class="card-text">Kategori </p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tags fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_incoming }}</h4>
+                        <p class="card-text">Barang Masuk (30d)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-arrow-down fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_outgoing }}</h4>
+                        <p class="card-text">Barang Keluar (30d)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-arrow-up fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions and Recent Activities -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt text-primary me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_item') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Tambahkan Barang
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_category') }}" class="btn btn-info w-100">
+                            <i class="fas fa-tags me-2"></i>Tambahkan Kategori
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_incoming_item') }}" class="btn btn-success w-100">
+                            <i class="fas fa-arrow-down me-2"></i>Catat Barang Masuk
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_outgoing_item') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-arrow-up me-2"></i>Catat Barang Keluar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activities -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-history text-info me-2"></i>
+                    Aktivitas Terkini
+                </h5>
+                <a href="{{ url_for('activity_log') }}" class="btn btn-outline-info btn-sm">Lihat Semua</a>
+            </div>
+            <div class="card-body">
+                {% if recent_activities %}
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        {% if activity.action == 'CREATE' %}
+                                            <i class="fas fa-plus text-success me-1"></i>
+                                        {% elif activity.action == 'UPDATE' %}
+                                            <i class="fas fa-edit text-warning me-1"></i>
+                                        {% elif activity.action == 'DELETE' %}
+                                            <i class="fas fa-trash text-danger me-1"></i>
+                                        {% endif %}
+                                        {{ activity.action.title() }} {{ activity.table_name.title() }}
+                                    </h6>
+                                    <small>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                {% if activity.details %}
+                                    <small class="text-muted">{{ activity.details }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                        <p>Tidak Ada Aktivias Terkini</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+incoming_items.html
+{% extends "base.html" %}
+
+{% block title %}Barang Masuk - PT Telkom Indonesia Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-arrow-down me-2"></i>
+                Barang Masuk
+            </h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#incomingModal" onclick="openAddModal()">
+                <i class="fas fa-plus me-2"></i>Catat Barang Masuk
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Incoming Items Table -->
+<div class="card">
+    <div class="card-body">
+        {% if incoming.items %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tanggal Diterima</th>
+                            <th>Barang</th>
+                            <th>Kuantitas</th>
+                            <th>Harga Satuan</th>
+                            <th>Total Nilai</th>
+                            <th>Pemasok</th>
+                            <th>Nomor Batch</th>
+                            <th>Tanggal Kadaluarsa</th>
+                            <th>Diterima Oleh</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in incoming.items %}
+                            <tr>
+                                <td>
+                                    <small>
+                                        {{ record.received_date.strftime('%Y-%m-%d') }}<br>
+                                        {{ record.received_date.strftime('%H:%M') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong>{{ record.item.name }}</strong><br>
+                                    <small class="text-muted">Code: {{ record.item.code }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">+{{ record.quantity }}</span>
+                                </td>
+                                <td>Rp {{ "{:,.2f}".format(record.unit_price) }}</td>
+                                <td>Rp {{ "{:,.2f}".format(record.total_value) }}</td>
+                                <td>{{ record.supplier or '-' }}</td>
+                                <td>{{ record.batch_number or '-' }}</td>
+                                <td>{{ record.expiry_date.strftime('%Y-%m-%d') if record.expiry_date else '-' }}</td>
+                                <td>{{ record.received_by }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if incoming.pages > 1 %}
+                <nav aria-label="Incoming items pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if incoming.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('incoming_items', page=incoming.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i> Sebelumnya
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in incoming.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != incoming.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('incoming_items', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if incoming.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('incoming_items', page=incoming.next_num) }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-arrow-down fa-3x mb-3"></i>
+                <h4>Tidak ada barang masuk tercatat</h4>
+                <p>Mulai mencatat barang masuk untuk melacak penambahan stok.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Incoming Item Modal -->
+<div class="modal fade" id="incomingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="incomingForm" method="POST" action="{{ url_for('add_incoming_item') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Catat Barang Masuk</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="item_id" class="form-label">Item *</label>
+                            <select class="form-select" id="item_id" name="item_id" required>
+                                <option value="">Pilih Barang</option>
+                                {% for item in form.item_id.choices %}
+                                    <option value="{{ item[0] }}">{{ item[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="quantity" class="form-label">Kuantitas Diterima *</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="unit_price" class="form-label">Harga Satuan (Rp) *</label>
+                            <input type="number" class="form-control" id="unit_price" name="unit_price" min="0.01" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="supplier" class="form-label">Pemasok</label>
+                            <input type="text" class="form-control" id="supplier" name="supplier">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="batch_number" class="form-label">Nomor Batch</label>
+                            <input type="text" class="form-control" id="batch_number" name="batch_number">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="expiry_date" class="form-label">Tanggal Kadaluarsa</label>
+                            <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="received_by" class="form-label">Diterima Oleh</label>
+                            <input type="text" class="form-control" id="received_by" name="received_by" value="System Admin">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Catatan</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
+                    <button type="submit" class="btn btn-primary">Catat Barang Masuk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAddModal() {
+    document.getElementById('incomingForm').reset();
+}
+</script>
+{% endblock %}
+
+items.html
+{% extends "base.html" %}
+
+{% block title %}Barang - PT Telkom Indonesia Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-box me-2"></i>
+                Inventoris Barang
+            </h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#itemModal" onclick="openAddModal()">
+                <i class="fas fa-plus me-2"></i>Tambah Barang Baru
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('items') }}">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="search" class="form-label">Cari</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Search by code, name, or description">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="category" class="form-label">Kategori</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">Semua Kategori</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if category_filter == category.id|string %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-1"></i>Filter
+                        </button>
+                        <a href="{{ url_for('items') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Items Table -->
+<div class="card">
+    <div class="card-body">
+        {% if items %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Nama</th>
+                            <th>Kategori</th>
+                            <th>Kuantitas</th>
+                            <th>Harga Satuan</th>
+                            <th>Pemasok</th>
+                            <th>Dibuat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                            <tr>
+                                <td><strong>{{ item.code }}</strong></td>
+                                <td>
+                                    <strong>{{ item.name }}</strong>
+                                    {% if item.description %}
+                                        <br><small class="text-muted">{{ item.description }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ item.category.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if item.quantity == 0 %}bg-danger{% elif item.quantity < 10 %}bg-warning{% else %}bg-success{% endif %}">
+                                        {{ item.quantity }}
+                                    </span>
+                                </td>
+                                <td>Rp {{ "{:,.2f}".format(item.unit_price) }}</td>
+                                <td>{{ item.supplier or '-' }}</td>
+                                <td>
+                                    <small>{{ item.created_at.strftime('%Y-%m-%d') }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-warning" onclick="openEditModal({{ item.id }}, '{{ item.code }}', '{{ item.name }}', '{{ item.description or '' }}', {{ item.quantity }}, {{ item.unit_price }}, '{{ item.supplier or '' }}', {{ item.category_id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" onclick="confirmDelete({{ item.id }}, '{{ item.name }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-box fa-3x mb-3"></i>
+                <h4>Tidak ada barang yang ditemukan</h4>
+                <p>Mulai dengan menambahkan barang ke inventaris Anda atau sesuaikan filter pencarian.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Item Modal -->
+<div class="modal fade" id="itemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="itemForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Tambah Barang Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="code" class="form-label">Kode Barang *</label>
+                            <input type="text" class="form-control" id="code" name="code" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Nama Barang *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Deskripsi</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="quantity" class="form-label">Kuantitas *</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="0" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="unit_price" class="form-label">Harga Satuan *</label>
+                            <input type="number" class="form-control" id="unit_price" name="unit_price" min="0.01" step="0.01" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="category_id" class="form-label">Kategori *</label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="supplier" class="form-label">Pemasok</label>
+                        <input type="text" class="form-control" id="supplier" name="supplier">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Tambah Barang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menghapus Barang <strong id="deleteItemName"></strong>?</p>
+                <p class="text-danger">Aksi ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
+                <form method="POST" id="deleteForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentItemId = null;
+
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add New Item';
+    document.getElementById('submitBtn').textContent = 'Add Item';
+    document.getElementById('itemForm').action = '{{ url_for("add_item") }}';
+    document.getElementById('itemForm').reset();
+    currentItemId = null;
+}
+
+function openEditModal(id, code, name, description, quantity, unit_price, supplier, category_id) {
+    document.getElementById('modalTitle').textContent = 'Edit Item';
+    document.getElementById('submitBtn').textContent = 'Update Item';
+    document.getElementById('itemForm').action = '/items/edit/' + id;
+    
+    document.getElementById('code').value = code;
+    document.getElementById('name').value = name;
+    document.getElementById('description').value = description;
+    document.getElementById('quantity').value = quantity;
+    document.getElementById('unit_price').value = unit_price;
+    document.getElementById('supplier').value = supplier;
+    document.getElementById('category_id').value = category_id;
+    
+    currentItemId = id;
+    new bootstrap.Modal(document.getElementById('itemModal')).show();
+}
+
+function confirmDelete(id, name) {
+    document.getElementById('deleteItemName').textContent = name;
+    document.getElementById('deleteForm').action = '/items/delete/' + id;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}
+
+login.html
+{% extends "auth_layout.html" %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h4 class="fw-bold">Welcome Back!</h4>
+    <p class="text-muted">Please sign in to access your account</p>
+</div>
+
+<form action="" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    
+    <div class="mb-3">
+        <div class="input-group">
+            <span class="input-group-text bg-white">
+                <i class="fas fa-user text-muted"></i>
+            </span>
+            {{ form.username(class="form-control", size=32, placeholder="Enter your username") }}
+        </div>
+        {% for error in form.username.errors %}
+        <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+    </div>
+    
+    <div class="mb-3">
+        <div class="input-group">
+            <span class="input-group-text bg-white">
+                <i class="fas fa-lock text-muted"></i>
+            </span>
+            {{ form.password(class="form-control", size=32, placeholder="Enter your password") }}
+        </div>
+        {% for error in form.password.errors %}
+        <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+    </div>
+    
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div class="form-check">
+            {{ form.remember_me(class="form-check-input") }}
+            {{ form.remember_me.label(class="form-check-label") }}
+        </div>
+    </div>
+    
+    <div class="d-grid mb-3">
+        {{ form.submit(class="btn btn-primary btn-lg") }}
+    </div>
+    
+    <div class="position-relative my-4">
+        <hr>
+        <p class="small position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted">OR</p>
+    </div>
+    
+    <div class="text-center">
+        <p class="mb-0">Don't have an account? <a href="{{ url_for('register') }}" class="text-decoration-none fw-bold">Sign Up</a></p>
+    </div>
+</form>
+{% endblock %}
+
+outgoing_items.html
+{% extends "base.html" %}
+
+{% block title %}Barang Keluar - PT Telkom Indonesia Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-arrow-up me-2"></i>
+                Barang Keluar
+            </h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#outgoingModal" onclick="openAddModal()">
+                <i class="fas fa-plus me-2"></i>Catat Barang Keluar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Outgoing Items Table -->
+<div class="card">
+    <div class="card-body">
+        {% if outgoing.items %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tanggal Dikeluarkan</th>
+                            <th>Barang</th>
+                            <th>Kuantitas</th>
+                            <th>Total Nilai</th>
+                            <th>Tujuan</th>
+                            <th>Tujuan Penggunaan</th>
+                            <th>Nomor Permintaan</th>
+                            <th>Dikeluarkan Oleh</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in outgoing.items %}
+                            <tr>
+                                <td>
+                                    <small>
+                                        {{ record.issued_date.strftime('%Y-%m-%d') }}<br>
+                                        {{ record.issued_date.strftime('%H:%M') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong>{{ record.item.name }}</strong><br>
+                                    <small class="text-muted">Code: {{ record.item.code }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">-{{ record.quantity }}</span>
+                                </td>
+                                <td>Rp {{ "{:,.2f}".format(record.total_value) }}</td>
+                                <td>{{ record.destination }}</td>
+                                <td>{{ record.purpose or '-' }}</td>
+                                <td>{{ record.request_number or '-' }}</td>
+                                <td>{{ record.issued_by }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if outgoing.pages > 1 %}
+                <nav aria-label="Outgoing items pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if outgoing.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('outgoing_items', page=outgoing.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in outgoing.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != outgoing.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('outgoing_items', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if outgoing.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('outgoing_items', page=outgoing.next_num) }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-arrow-up fa-3x mb-3"></i>
+                <h4>Tidak ada barang keluar tercatat</h4>
+                <p>Mulai mencatat barang keluar untuk melacak distribusi stok.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Outgoing Item Modal -->
+<div class="modal fade" id="outgoingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="outgoingForm" method="POST" action="{{ url_for('add_outgoing_item') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Catat Barang Keluar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="item_id" class="form-label">Item *</label>
+                            <select class="form-select" id="item_id" name="item_id" required>
+                                <option value="">Pilih Barang</option>
+                                {% for item in form.item_id.choices %}
+                                    <option value="{{ item[0] }}">{{ item[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">Kuantitas Dikeluarkan *</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="destination" class="form-label">Tujuan *</label>
+                            <input type="text" class="form-control" id="destination" name="destination" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="purpose" class="form-label">Tujuan Penggunaan</label>
+                            <input type="text" class="form-control" id="purpose" name="purpose">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="request_number" class="form-label">Nomor Permintaan</label>
+                            <input type="text" class="form-control" id="request_number" name="request_number">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="issued_by" class="form-label">Dikeluarkan Oleh</label>
+                            <input type="text" class="form-control" id="issued_by" name="issued_by" value="System Admin">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Catatan</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
+                    <button type="submit" class="btn btn-primary">Catat Barang Keluar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAddModal() {
+    document.getElementById('outgoingForm').reset();
+}
+</script>
+{% endblock %}
+
+register.html
+{% extends "auth_layout.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<h5 class="card-title text-center mb-4">Register New Account</h5>
+<form action="" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.username.label(class="form-label") }}
+        {{ form.username(class="form-control", size=32) }}
+        {% for error in form.username.errors %}
+        <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.email.label(class="form-label") }}
+        {{ form.email(class="form-control", size=32) }}
+        {% for error in form.email.errors %}
+        <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.password.label(class="form-label") }}
+        {{ form.password(class="form-control", size=32) }}
+        {% for error in form.password.errors %}
+        <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.password2.label(class="form-label") }}
+        {{ form.password2(class="form-control", size=32) }}
+        {% for error in form.password2.errors %}
+        <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+    </div>
+    <div class="d-grid">
+        {{ form.submit(class="btn btn-primary") }}
+    </div>
+    <p class="mt-3 text-center">
+        Already have an account? <a href="{{ url_for('login') }}">Sign In!</a>
+    </p>
+</form>
+{% endblock %}
+
+app.py
+import os
+import logging
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
+from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_login import LoginManager
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
+class Base(DeclarativeBase):
+    pass
+
+db = SQLAlchemy(model_class=Base)
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
+
+
+# Create the app
+app = Flask(__name__)
+app.secret_key = os.environ.get("SESSION_SECRET", "telkom-inventory-secret-key")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Configure the database
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///telkom_inventory.db")
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_recycle": 300,
+    "pool_pre_ping": True,
+}
+
+# Initialize the app with the extension
+db.init_app(app)
+login_manager.init_app(app)
+
+
+with app.app_context():
+    # Import models to ensure tables are created
+    import models
+    db.create_all()
+    
+    # Import and register routes
+    import routes
+
+forms.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, IntegerField, FloatField, SelectField, DateField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, NumberRange, Optional
+from models import User, Category, Item
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember Me')
+    submit = SubmitField('Sign In')
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    password2 = PasswordField(
+        'Repeat Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match.')])
+    submit = SubmitField('Register')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user is not None:
+            raise ValidationError('This username is already taken.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None:
+            raise ValidationError('This email address is already registered.')
+
+class CategoryForm(FlaskForm):
+    name = StringField('Category Name', validators=[DataRequired(), Length(min=2, max=100)])
+    description = TextAreaField('Description', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Save Category')
+
+class ItemForm(FlaskForm):
+    code = StringField('Item Code', validators=[DataRequired(), Length(min=2, max=50)])
+    name = StringField('Item Name', validators=[DataRequired(), Length(min=2, max=200)])
+    description = TextAreaField('Description', validators=[Optional(), Length(max=500)])
+    quantity = IntegerField('Quantity', validators=[DataRequired(), NumberRange(min=0)])
+    unit_price = FloatField('Unit Price', validators=[DataRequired(), NumberRange(min=0.01)])
+    supplier = StringField('Supplier', validators=[Optional(), Length(max=200)])
+    category_id = SelectField('Category', validators=[DataRequired()], coerce=int)
+    submit = SubmitField('Save Item')
+    
+    def __init__(self, *args, **kwargs):
+        super(ItemForm, self).__init__(*args, **kwargs)
+        self.category_id.choices = [(c.id, c.name) for c in Category.query.order_by(Category.name).all()]
+
+class IncomingItemForm(FlaskForm):
+    item_id = SelectField('Item', validators=[DataRequired()], coerce=int)
+    quantity = IntegerField('Quantity Received', validators=[DataRequired(), NumberRange(min=1)])
+    unit_price = FloatField('Unit Price', validators=[DataRequired(), NumberRange(min=0.01)])
+    supplier = StringField('Supplier', validators=[Optional(), Length(max=200)])
+    batch_number = StringField('Batch Number', validators=[Optional(), Length(max=100)])
+    expiry_date = DateField('Expiry Date', validators=[Optional()])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
+    received_by = StringField('Received By', validators=[DataRequired(), Length(max=100)])
+    submit = SubmitField('Record Incoming Items')
+    
+    def __init__(self, *args, **kwargs):
+        super(IncomingItemForm, self).__init__(*args, **kwargs)
+        self.item_id.choices = [(i.id, f"{i.code} - {i.name}") for i in Item.query.order_by(Item.name).all()]
+
+class OutgoingItemForm(FlaskForm):
+    item_id = SelectField('Item', validators=[DataRequired()], coerce=int)
+    quantity = IntegerField('Quantity Issued', validators=[DataRequired(), NumberRange(min=1)])
+    destination = StringField('Destination', validators=[DataRequired(), Length(min=2, max=200)])
+    purpose = StringField('Purpose', validators=[Optional(), Length(max=200)])
+    request_number = StringField('Request Number', validators=[Optional(), Length(max=100)])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
+    issued_by = StringField('Issued By', validators=[DataRequired(), Length(max=100)])
+    submit = SubmitField('Record Outgoing Items')
+    
+    def __init__(self, *args, **kwargs):
+        super(OutgoingItemForm, self).__init__(*args, **kwargs)
+        self.item_id.choices = [(i.id, f"{i.code} - {i.name} (Stock: {i.quantity})") for i in Item.query.filter(Item.quantity > 0).order_by(Item.name).all()]
+
+main.py
+from app import app
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
+
+models.py
+from datetime import datetime
+from app import db, login_manager
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(256))
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+class Category(db.Model):
+    __tablename__ = 'categories'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    items = db.relationship('Item', backref='category', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Category {self.name}>'
+
+class Item(db.Model):
+    __tablename__ = 'items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), nullable=False, unique=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    quantity = db.Column(db.Integer, nullable=False, default=0)
+    unit_price = db.Column(db.Float, nullable=False, default=0.0)
+    supplier = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    
+    def __repr__(self):
+        return f'<Item {self.code}: {self.name}>'
+
+class IncomingItem(db.Model):
+    __tablename__ = 'incoming_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Float, nullable=False, default=0.0)
+    supplier = db.Column(db.String(200))
+    batch_number = db.Column(db.String(100))
+    expiry_date = db.Column(db.Date)
+    received_date = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+    received_by = db.Column(db.String(100), default='System Admin')
+    
+    item = db.relationship('Item', backref='incoming_transactions')
+    
+    @property
+    def total_value(self):
+        return self.quantity * self.unit_price
+    
+    def __repr__(self):
+        return f'<IncomingItem {self.quantity} of {self.item.name}>'
+
+class OutgoingItem(db.Model):
+    __tablename__ = 'outgoing_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    destination = db.Column(db.String(200), nullable=False)
+    purpose = db.Column(db.String(200))
+    request_number = db.Column(db.String(100))
+    issued_date = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+    issued_by = db.Column(db.String(100), default='System Admin')
+    
+    item = db.relationship('Item', backref='outgoing_transactions')
+    
+    @property
+    def total_value(self):
+        return self.quantity * self.item.unit_price
+    
+    def __repr__(self):
+        return f'<OutgoingItem {self.quantity} of {self.item.name}>'
+
+class ActivityLog(db.Model):
+    __tablename__ = 'activity_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    action = db.Column(db.String(100), nullable=False)
+    table_name = db.Column(db.String(50), nullable=False)
+    record_id = db.Column(db.Integer, nullable=False)
+    details = db.Column(db.Text)
+    user = db.Column(db.String(100), default='System')
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<ActivityLog {self.action} on {self.table_name}>'

@@ -12,10 +12,9 @@
     </div>
 </div>
 
-<!-- Statistics Cards -->
 <div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card bg-primary text-white">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-primary text-white h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -29,14 +28,13 @@
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card bg-info text-white">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-info text-white h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="card-title">{{ total_categories }}</h4>
-                        <p class="card-text">Kategori </p>
+                        <p class="card-text">Kategori</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-tags fa-2x"></i>
@@ -45,9 +43,8 @@
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card bg-success text-white">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-success text-white h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -61,9 +58,8 @@
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card bg-warning text-white">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-warning text-white h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -79,52 +75,53 @@
     </div>
 </div>
 
-<!-- Quick Actions and Recent Activities -->
 <div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
+    <div class="col-lg-7">
+        <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-bolt text-primary me-2"></i>
-                    Quick Actions
-                </h5>
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Akses Cepat</h5>
             </div>
             <div class="card-body">
                 <div class="row">
+                    {% if current_user.role in ['Admin', 'Manager'] %}
                     <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('add_item') }}" class="btn btn-primary w-100">
-                            <i class="fas fa-plus me-2"></i>Tambahkan Barang
-                        </a>
+                        <a href="{{ url_for('items', action='add') }}" class="btn btn-primary w-100"><i class="fas fa-plus me-2"></i>Tambahkan Barang</a>
+                    </div>
+                    {% endif %}
+                    {% if current_user.role == 'Admin' %}
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('add_category') }}" class="btn btn-info w-100"><i class="fas fa-tags me-2"></i>Tambahkan Kategori</a>
+                    </div>
+                    {% endif %}
+                    {% if current_user.role in ['Admin', 'Manager'] %}
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('incoming_items', action='add') }}" class="btn btn-success w-100"><i class="fas fa-arrow-down me-2"></i>Catat Barang Masuk</a>
                     </div>
                     <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('add_category') }}" class="btn btn-info w-100">
-                            <i class="fas fa-tags me-2"></i>Tambahkan Kategori
-                        </a>
+                        <a href="{{ url_for('outgoing_items', action='add') }}" class="btn btn-warning w-100"><i class="fas fa-arrow-up me-2"></i>Catat Barang Keluar</a>
                     </div>
-                    <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('add_incoming_item') }}" class="btn btn-success w-100">
-                            <i class="fas fa-arrow-down me-2"></i>Catat Barang Masuk
-                        </a>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('add_outgoing_item') }}" class="btn btn-warning w-100">
-                            <i class="fas fa-arrow-up me-2"></i>Catat Barang Keluar
-                        </a>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie me-2"></i>Distribusi Barang per Kategori</h5>
+            </div>
+            <div class="card-body" style="height: 400px;">
+                <canvas id="categoryPieChart"></canvas>
+            </div>
+        </div>
     </div>
-    
-    <!-- Recent Activities -->
-    <div class="col-md-6 mb-4">
+
+    <div class="col-lg-5">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-history text-info me-2"></i>
-                    Aktivitas Terkini
-                </h5>
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Aktivitas Terkini</h5>
+                {% if current_user.role == 'Admin' %}
                 <a href="{{ url_for('activity_log') }}" class="btn btn-outline-info btn-sm">Lihat Semua</a>
+                {% endif %}
             </div>
             <div class="card-body">
                 {% if recent_activities %}
@@ -133,31 +130,61 @@
                             <div class="list-group-item">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">
-                                        {% if activity.action == 'CREATE' %}
-                                            <i class="fas fa-plus text-success me-1"></i>
-                                        {% elif activity.action == 'UPDATE' %}
-                                            <i class="fas fa-edit text-warning me-1"></i>
-                                        {% elif activity.action == 'DELETE' %}
-                                            <i class="fas fa-trash text-danger me-1"></i>
-                                        {% endif %}
-                                        {{ activity.action.title() }} {{ activity.table_name.title() }}
+                                        {% if activity.action == 'CREATE' %}<i class="fas fa-plus text-success me-1"></i>
+                                        {% elif activity.action == 'UPDATE' %}<i class="fas fa-edit text-warning me-1"></i>
+                                        {% elif activity.action == 'DELETE' %}<i class="fas fa-trash text-danger me-1"></i>{% endif %}
+                                        {{ activity.action.title() }} {{ activity.table_name.replace('_', ' ').title() }}
                                     </h6>
-                                    <small>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    <small class="text-muted">{{ activity.timestamp.strftime('%H:%M') }}</small>
                                 </div>
-                                {% if activity.details %}
-                                    <small class="text-muted">{{ activity.details }}</small>
-                                {% endif %}
+                                {% if activity.details %}<small class="text-muted">{{ activity.details }}</small>{% endif %}
                             </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center text-muted">
+                    <div class="text-center text-muted p-4">
                         <i class="fas fa-clipboard-list fa-3x mb-3"></i>
-                        <p>Tidak Ada Aktivias Terkini</p>
+                        <p>Tidak Ada Aktivitas Terkini</p>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('/api/chart/items_by_category')
+        .then(response => response.json())
+        .then(data => {
+            if (data.labels.length === 0) return;
+            const ctx = document.getElementById('categoryPieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Jumlah Barang',
+                        data: data.data,
+                        backgroundColor: [
+                            'rgba(220, 38, 38, 0.8)', 'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)', 'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)'
+                        ],
+                        borderColor: 'rgba(255, 255, 255, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+        });
+});
+</script>
 {% endblock %}

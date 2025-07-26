@@ -6,25 +6,23 @@
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>
-                <i class="fas fa-box me-2"></i>
-                Inventoris Barang
-            </h1>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#itemModal" onclick="openAddModal()">
+            <h1><i class="fas fa-box me-2"></i> Inventoris Barang</h1>
+            {% if current_user.role in ['Admin', 'Manager'] %}
+            <a href="{{ url_for('add_item') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Tambah Barang Baru
-            </button>
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Search and Filter -->
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" action="{{ url_for('items') }}">
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label for="search" class="form-label">Cari</label>
-                    <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Search by code, name, or description">
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Cari berdasarkan kode, nama, atau deskripsi">
                 </div>
                 <div class="col-md-4 mb-3">
                     <label for="category" class="form-label">Kategori</label>
@@ -53,7 +51,6 @@
     </div>
 </div>
 
-<!-- Items Table -->
 <div class="card">
     <div class="card-body">
         {% if items %}
@@ -68,22 +65,20 @@
                             <th>Harga Satuan</th>
                             <th>Pemasok</th>
                             <th>Dibuat</th>
+                            {% if current_user.role in ['Admin', 'Manager'] %}
                             <th>Aksi</th>
+                            {% endif %}
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="items-table-body">
                         {% for item in items %}
-                            <tr>
+                            <tr id="item-row-{{ item.id }}">
                                 <td><strong>{{ item.code }}</strong></td>
                                 <td>
                                     <strong>{{ item.name }}</strong>
-                                    {% if item.description %}
-                                        <br><small class="text-muted">{{ item.description }}</small>
-                                    {% endif %}
+                                    {% if item.description %}<br><small class="text-muted">{{ item.description }}</small>{% endif %}
                                 </td>
-                                <td>
-                                    <span class="badge bg-info">{{ item.category.name }}</span>
-                                </td>
+                                <td><span class="badge bg-info">{{ item.category.name }}</span></td>
                                 <td>
                                     <span class="badge {% if item.quantity == 0 %}bg-danger{% elif item.quantity < 10 %}bg-warning{% else %}bg-success{% endif %}">
                                         {{ item.quantity }}
@@ -91,19 +86,21 @@
                                 </td>
                                 <td>Rp {{ "{:,.2f}".format(item.unit_price) }}</td>
                                 <td>{{ item.supplier or '-' }}</td>
-                                <td>
-                                    <small>{{ item.created_at.strftime('%Y-%m-%d') }}</small>
-                                </td>
+                                <td><small>{{ item.created_at.strftime('%Y-%m-%d') }}</small></td>
+                                {% if current_user.role in ['Admin', 'Manager'] %}
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <button type="button" class="btn btn-outline-warning" onclick="openEditModal({{ item.id }}, '{{ item.code }}', '{{ item.name }}', '{{ item.description or '' }}', {{ item.quantity }}, {{ item.unit_price }}, '{{ item.supplier or '' }}', {{ item.category_id }})">
+                                        <button type="button" class="btn btn-outline-warning" onclick="openEditModal({{ item.id }})">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        {% if current_user.role == 'Admin' %}
                                         <button type="button" class="btn btn-outline-danger" onclick="confirmDelete({{ item.id }}, '{{ item.name }}')">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        {% endif %}
                                     </div>
                                 </td>
+                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -113,17 +110,17 @@
             <div class="text-center text-muted py-5">
                 <i class="fas fa-box fa-3x mb-3"></i>
                 <h4>Tidak ada barang yang ditemukan</h4>
-                <p>Mulai dengan menambahkan barang ke inventaris Anda atau sesuaikan filter pencarian.</p>
+                <p>Mulai dengan menambahkan barang ke inventaris Anda.</p>
             </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Item Modal -->
 <div class="modal fade" id="itemModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="itemForm" method="POST">
+                {{ form.hidden_tag() }}
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Tambah Barang Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -155,7 +152,7 @@
                         <div class="col-md-4 mb-3">
                             <label for="category_id" class="form-label">Kategori *</label>
                             <select class="form-select" id="category_id" name="category_id" required>
-                                <option value="">Select Category</option>
+                                <option value="" selected disabled>Pilih Kategori...</option>
                                 {% for category in categories %}
                                     <option value="{{ category.id }}">{{ category.name }}</option>
                                 {% endfor %}
@@ -176,7 +173,6 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -191,45 +187,23 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
                 <form method="POST" id="deleteForm" style="display: inline;">
+                    {{ delete_form.hidden_tag() }}
                     <button type="submit" class="btn btn-danger">Hapus</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+
+{% block scripts %}
 <script>
-let currentItemId = null;
-
-function openAddModal() {
-    document.getElementById('modalTitle').textContent = 'Add New Item';
-    document.getElementById('submitBtn').textContent = 'Add Item';
-    document.getElementById('itemForm').action = '{{ url_for("add_item") }}';
-    document.getElementById('itemForm').reset();
-    currentItemId = null;
-}
-
-function openEditModal(id, code, name, description, quantity, unit_price, supplier, category_id) {
-    document.getElementById('modalTitle').textContent = 'Edit Item';
-    document.getElementById('submitBtn').textContent = 'Update Item';
-    document.getElementById('itemForm').action = '/items/edit/' + id;
-    
-    document.getElementById('code').value = code;
-    document.getElementById('name').value = name;
-    document.getElementById('description').value = description;
-    document.getElementById('quantity').value = quantity;
-    document.getElementById('unit_price').value = unit_price;
-    document.getElementById('supplier').value = supplier;
-    document.getElementById('category_id').value = category_id;
-    
-    currentItemId = id;
-    new bootstrap.Modal(document.getElementById('itemModal')).show();
-}
-
-function confirmDelete(id, name) {
-    document.getElementById('deleteItemName').textContent = name;
-    document.getElementById('deleteForm').action = '/items/delete/' + id;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
+    function confirmDelete(id, name) {
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteForm').action = '/items/delete/' + id;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
 </script>
+<script src="{{ url_for('static', filename='js/items.js') }}"></script>
 {% endblock %}

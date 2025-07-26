@@ -10,14 +10,15 @@
                 <i class="fas fa-tags me-2"></i>
                 Kategori Barang
             </h1>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openAddModal()">
+            {% if current_user.role == 'Admin' %}
+            <a href="{{ url_for('add_category') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Tambah Kategori Baru
-            </button>
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Categories Table -->
 <div class="card">
     <div class="card-body">
         {% if categories %}
@@ -29,7 +30,9 @@
                             <th>Deskripsi</th>
                             <th>Jumlah Barang</th>
                             <th>Dibuat</th>
+                            {% if current_user.role == 'Admin' %}
                             <th>Aksi</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -47,22 +50,24 @@
                                     <span class="badge bg-info">{{ category.items|length }} Barang</span>
                                 </td>
                                 <td>{{ category.created_at.strftime('%Y-%m-%d') }}</td>
+                                {% if current_user.role == 'Admin' %}
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-primary" onclick="openEditModal({{ category.id }})" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                                        <a href="{{ url_for('edit_category', id=category.id) }}" class="btn btn-outline-primary">
                                             <i class="fas fa-edit"></i>
-                                        </button>
+                                        </a>
                                         {% if category.items|length == 0 %}
                                             <button type="button" class="btn btn-outline-danger" onclick="confirmDelete({{ category.id }}, '{{ category.name }}')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         {% else %}
-                                            <button type="button" class="btn btn-outline-danger" disabled title="Cannot delete category with items">
+                                            <button type="button" class="btn btn-outline-danger" disabled title="Tidak bisa hapus kategori yang memiliki barang">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         {% endif %}
                                     </div>
                                 </td>
+                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -78,35 +83,7 @@
     </div>
 </div>
 
-<!-- Category Modal -->
-<div class="modal fade" id="categoryModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="categoryForm" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Tambah Kategori Baru</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Nama Kategori *</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Deskripsi</label>
-                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter category description (optional)"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
-                    <button type="submit" class="btn btn-primary">Simpan Kategori</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
+{% if current_user.role == 'Admin' %}
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -121,32 +98,24 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batalkan</button>
                 <form id="deleteForm" method="POST" class="d-inline">
+                    {{ delete_form.hidden_tag() }}
                     <button type="submit" class="btn btn-danger">Hapus</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
+{% endblock %}
 
+{% block scripts %}
+{% if current_user.role == 'Admin' %}
 <script>
-function openAddModal() {
-    document.getElementById('modalTitle').textContent = 'Add New Category';
-    document.getElementById('categoryForm').action = '{{ url_for("add_category") }}';
-    document.getElementById('categoryForm').reset();
-}
-
-function openEditModal(categoryId) {
-    document.getElementById('modalTitle').textContent = 'Edit Category';
-    document.getElementById('categoryForm').action = '/categories/edit/' + categoryId;
-    
-    // Redirect to edit page for form population
-    window.location.href = '/categories/edit/' + categoryId;
-}
-
-function confirmDelete(categoryId, categoryName) {
-    document.getElementById('deleteCategoryName').textContent = categoryName;
-    document.getElementById('deleteForm').action = '/categories/delete/' + categoryId;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
+    function confirmDelete(categoryId, categoryName) {
+        document.getElementById('deleteCategoryName').textContent = categoryName;
+        document.getElementById('deleteForm').action = '/categories/delete/' + categoryId;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
 </script>
+{% endif %}
 {% endblock %}

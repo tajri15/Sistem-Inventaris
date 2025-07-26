@@ -10,14 +10,15 @@
                 <i class="fas fa-arrow-down me-2"></i>
                 Barang Masuk
             </h1>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#incomingModal" onclick="openAddModal()">
+            {% if current_user.role in ['Admin', 'Manager'] %}
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#incomingModal">
                 <i class="fas fa-plus me-2"></i>Catat Barang Masuk
             </button>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Incoming Items Table -->
 <div class="card">
     <div class="card-body">
         {% if incoming.items %}
@@ -64,44 +65,10 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
             {% if incoming.pages > 1 %}
                 <nav aria-label="Incoming items pagination" class="mt-4">
                     <ul class="pagination justify-content-center">
-                        {% if incoming.has_prev %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('incoming_items', page=incoming.prev_num) }}">
-                                    <i class="fas fa-chevron-left"></i> Sebelumnya
-                                </a>
-                            </li>
-                        {% endif %}
-                        
-                        {% for page_num in incoming.iter_pages() %}
-                            {% if page_num %}
-                                {% if page_num != incoming.page %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('incoming_items', page=page_num) }}">{{ page_num }}</a>
-                                    </li>
-                                {% else %}
-                                    <li class="page-item active">
-                                        <span class="page-link">{{ page_num }}</span>
-                                    </li>
-                                {% endif %}
-                            {% else %}
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
-                        
-                        {% if incoming.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('incoming_items', page=incoming.next_num) }}">
-                                    Next <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
+                        </ul>
                 </nav>
             {% endif %}
         {% else %}
@@ -114,11 +81,12 @@
     </div>
 </div>
 
-<!-- Incoming Item Modal -->
+{% if current_user.role in ['Admin', 'Manager'] %}
 <div class="modal fade" id="incomingModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="incomingForm" method="POST" action="{{ url_for('add_incoming_item') }}">
+                {{ form.hidden_tag() }}
                 <div class="modal-header">
                     <h5 class="modal-title">Catat Barang Masuk</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -128,7 +96,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="item_id" class="form-label">Item *</label>
                             <select class="form-select" id="item_id" name="item_id" required>
-                                <option value="">Pilih Barang</option>
+                                <option value="" selected disabled>Pilih Barang...</option>
                                 {% for item in form.item_id.choices %}
                                     <option value="{{ item[0] }}">{{ item[1] }}</option>
                                 {% endfor %}
@@ -159,8 +127,8 @@
                             <input type="date" class="form-control" id="expiry_date" name="expiry_date">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="received_by" class="form-label">Diterima Oleh</label>
-                            <input type="text" class="form-control" id="received_by" name="received_by" value="System Admin">
+                            <label for="received_by" class="form-label">Diterima Oleh *</label>
+                            <input type="text" class="form-control" id="received_by" name="received_by" value="{{ current_user.username }}" required>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -176,10 +144,18 @@
         </div>
     </div>
 </div>
+{% endif %}
+{% endblock %}
 
+
+{% block scripts %}
 <script>
-function openAddModal() {
-    document.getElementById('incomingForm').reset();
-}
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'add') {
+            const incomingModal = new bootstrap.Modal(document.getElementById('incomingModal'));
+            incomingModal.show();
+        }
+    });
 </script>
 {% endblock %}

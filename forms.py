@@ -28,19 +28,19 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('This email address is already registered.')
 
 class CategoryForm(FlaskForm):
-    name = StringField('Category Name', validators=[DataRequired(), Length(min=2, max=100)])
-    description = TextAreaField('Description', validators=[Optional(), Length(max=500)])
-    submit = SubmitField('Save Category')
+    name = StringField('Nama Kategori', validators=[DataRequired(), Length(min=2, max=100)])
+    description = TextAreaField('Deskripsi', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Simpan Kategori')
 
 class ItemForm(FlaskForm):
-    code = StringField('Item Code', validators=[DataRequired(), Length(min=2, max=50)])
-    name = StringField('Item Name', validators=[DataRequired(), Length(min=2, max=200)])
-    description = TextAreaField('Description', validators=[Optional(), Length(max=500)])
-    quantity = IntegerField('Quantity', validators=[DataRequired(), NumberRange(min=0)])
-    unit_price = FloatField('Unit Price', validators=[DataRequired(), NumberRange(min=0.01)])
-    supplier = StringField('Supplier', validators=[Optional(), Length(max=200)])
-    category_id = SelectField('Category', validators=[DataRequired()], coerce=int)
-    submit = SubmitField('Save Item')
+    code = StringField('Kode Barang', validators=[DataRequired(), Length(min=2, max=50)])
+    name = StringField('Nama Barang', validators=[DataRequired(), Length(min=2, max=200)])
+    description = TextAreaField('Deskripsi', validators=[Optional(), Length(max=500)])
+    quantity = IntegerField('Kuantitas', validators=[DataRequired(), NumberRange(min=0)])
+    unit_price = FloatField('Harga Satuan', validators=[DataRequired(), NumberRange(min=0.01)])
+    supplier = StringField('Pemasok', validators=[Optional(), Length(max=200)])
+    category_id = SelectField('Kategori', validators=[DataRequired()], coerce=int)
+    submit = SubmitField('Simpan Barang')
     
     def __init__(self, *args, **kwargs):
         super(ItemForm, self).__init__(*args, **kwargs)
@@ -48,14 +48,14 @@ class ItemForm(FlaskForm):
 
 class IncomingItemForm(FlaskForm):
     item_id = SelectField('Item', validators=[DataRequired()], coerce=int)
-    quantity = IntegerField('Quantity Received', validators=[DataRequired(), NumberRange(min=1)])
-    unit_price = FloatField('Unit Price', validators=[DataRequired(), NumberRange(min=0.01)])
-    supplier = StringField('Supplier', validators=[Optional(), Length(max=200)])
-    batch_number = StringField('Batch Number', validators=[Optional(), Length(max=100)])
-    expiry_date = DateField('Expiry Date', validators=[Optional()])
-    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
-    received_by = StringField('Received By', validators=[DataRequired(), Length(max=100)])
-    submit = SubmitField('Record Incoming Items')
+    quantity = IntegerField('Kuantitas Diterima', validators=[DataRequired(), NumberRange(min=1)])
+    unit_price = FloatField('Harga Satuan', validators=[DataRequired(), NumberRange(min=0.01)])
+    supplier = StringField('Pemasok', validators=[Optional(), Length(max=200)])
+    batch_number = StringField('Nomor Batch', validators=[Optional(), Length(max=100)])
+    expiry_date = DateField('Tanggal Kadaluarsa', validators=[Optional()])
+    notes = TextAreaField('Catatan', validators=[Optional(), Length(max=500)])
+    received_by = StringField('Diterima Oleh', validators=[DataRequired(), Length(max=100)])
+    submit = SubmitField('Catat Barang Masuk')
     
     def __init__(self, *args, **kwargs):
         super(IncomingItemForm, self).__init__(*args, **kwargs)
@@ -63,14 +63,18 @@ class IncomingItemForm(FlaskForm):
 
 class OutgoingItemForm(FlaskForm):
     item_id = SelectField('Item', validators=[DataRequired()], coerce=int)
-    quantity = IntegerField('Quantity Issued', validators=[DataRequired(), NumberRange(min=1)])
-    destination = StringField('Destination', validators=[DataRequired(), Length(min=2, max=200)])
-    purpose = StringField('Purpose', validators=[Optional(), Length(max=200)])
-    request_number = StringField('Request Number', validators=[Optional(), Length(max=100)])
-    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
-    issued_by = StringField('Issued By', validators=[DataRequired(), Length(max=100)])
-    submit = SubmitField('Record Outgoing Items')
+    quantity = IntegerField('Kuantitas Dikeluarkan', validators=[DataRequired(), NumberRange(min=1)])
+    destination = StringField('Tujuan', validators=[DataRequired(), Length(min=2, max=200)])
+    purpose = StringField('Tujuan Penggunaan', validators=[Optional(), Length(max=200)])
+    request_number = StringField('Nomor Permintaan', validators=[Optional(), Length(max=100)])
+    notes = TextAreaField('Catatan', validators=[Optional(), Length(max=500)])
+    issued_by = StringField('Dikeluarkan Oleh', validators=[DataRequired(), Length(max=100)])
+    submit = SubmitField('Catat Barang Keluar')
     
     def __init__(self, *args, **kwargs):
         super(OutgoingItemForm, self).__init__(*args, **kwargs)
         self.item_id.choices = [(i.id, f"{i.code} - {i.name} (Stock: {i.quantity})") for i in Item.query.filter(Item.quantity > 0).order_by(Item.name).all()]
+
+# --- TAMBAHKAN KELAS FORM BARU DI BAWAH INI ---
+class DeleteForm(FlaskForm):
+    submit = SubmitField('Delete')
